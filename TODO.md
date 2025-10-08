@@ -1,0 +1,4 @@
+- [x] Update views/transactions.php to embed borrowed items data in transaction rows and modify inline showReturnForm to use embedded data
+- [x] Update assets/js/script.js showReturnForm function to use embedded data instead of API fetch
+- [x] Delete api/get_transaction_items.php file
+- [ ] Test return functionality
