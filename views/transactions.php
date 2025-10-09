@@ -25,34 +25,70 @@ if (isset($_POST['create_transaction'])) {
     $date_needed = mysqli_real_escape_string($connection, $_POST['date_needed']);
     $date_of_return = mysqli_real_escape_string($connection, $_POST['date_of_return']);
 
-    $insert_sql = "INSERT INTO borrowing_transactions (borrower_id, activity_purpose, place_of_activity, date_requested, date_needed, date_of_return, status, created_at) VALUES ('$borrower_id', '$activity_purpose', '$place_of_activity', '$date_requested', '$date_needed', '$date_of_return', 'pending', NOW())";
+    // Check availability for each item based on dates
+    $insufficient_items = array();
+    if (isset($_POST['items']) && is_array($_POST['items'])) {
+        foreach ($_POST['items'] as $item_id => $quantity) {
+            $item_id_clean = mysqli_real_escape_string($connection, $item_id);
+            $quantity = intval($quantity);
 
-    if (mysqli_query($connection, $insert_sql)) {
-        $transaction_id = mysqli_insert_id($connection);
+            // Get total quantity
+            $total_sql = "SELECT total_quantity FROM items WHERE item_id = '$item_id_clean'";
+            $total_result = mysqli_query($connection, $total_sql);
+            $total_row = mysqli_fetch_assoc($total_result);
+            $total_quantity = $total_row ? $total_row['total_quantity'] : 0;
 
-        // Add items to transaction
-        if (isset($_POST['items']) && is_array($_POST['items'])) {
-            foreach ($_POST['items'] as $item_id => $quantity) {
-                $item_id = mysqli_real_escape_string($connection, $item_id);
-                $quantity = intval($quantity);
-                if ($quantity > 0) {
-                    $item_insert_sql = "INSERT INTO borrowed_items (transaction_id, item_id, quantity_required) VALUES ('$transaction_id', '$item_id', $quantity)";
-                    if (!mysqli_query($connection, $item_insert_sql)) {
-                        $message = "Error adding item ID $item_id to transaction.";
-                        $message_type = 'error';
-                        break;
+            // Calculate committed quantity from overlapping transactions
+            $committed_sql = "SELECT COALESCE(SUM(CASE WHEN t.status = 'issued' THEN (bi.quantity_issued - bi.quantity_returned) ELSE bi.quantity_required END), 0) as committed " .
+                "FROM borrowing_transactions t JOIN borrowed_items bi ON t.transaction_id = bi.transaction_id " .
+                "WHERE bi.item_id = '$item_id_clean' " .
+                "AND t.status IN ('approved', 'issued') " .
+                "AND t.date_needed <= '$date_of_return' " .
+                "AND t.date_of_return >= '$date_needed'";
+            $committed_result = mysqli_query($connection, $committed_sql);
+            $committed_row = mysqli_fetch_assoc($committed_result);
+            $committed = $committed_row ? $committed_row['committed'] : 0;
+
+            $available = $total_quantity - $committed;
+            if ($available < $quantity) {
+                $insufficient_items[] = "Item ID $item_id_clean: Requested $quantity, Available $available";
+            }
+        }
+    }
+
+    if (!empty($insufficient_items)) {
+        $message = 'Insufficient stock for the following items during the selected dates: ' . implode(', ', $insufficient_items);
+        $message_type = 'error';
+    } else {
+        $insert_sql = "INSERT INTO borrowing_transactions (borrower_id, activity_purpose, place_of_activity, date_requested, date_needed, date_of_return, status, created_at) VALUES ('$borrower_id', '$activity_purpose', '$place_of_activity', '$date_requested', '$date_needed', '$date_of_return', 'pending', NOW())";
+
+        if (mysqli_query($connection, $insert_sql)) {
+            $transaction_id = mysqli_insert_id($connection);
+
+            // Add items to transaction
+            if (isset($_POST['items']) && is_array($_POST['items'])) {
+                foreach ($_POST['items'] as $item_id => $quantity) {
+                    $item_id = mysqli_real_escape_string($connection, $item_id);
+                    $quantity = intval($quantity);
+                    if ($quantity > 0) {
+                        $item_insert_sql = "INSERT INTO borrowed_items (transaction_id, item_id, quantity_required) VALUES ('$transaction_id', '$item_id', $quantity)";
+                        if (!mysqli_query($connection, $item_insert_sql)) {
+                            $message = "Error adding item ID $item_id to transaction.";
+                            $message_type = 'error';
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        if (empty($message)) {
-            $message = 'Transaction created successfully!';
-            $message_type = 'success';
+            if (empty($message)) {
+                $message = 'Transaction created successfully!';
+                $message_type = 'success';
+            }
+        } else {
+            $message = 'Error creating transaction.';
+            $message_type = 'error';
         }
-    } else {
-        $message = 'Error creating transaction.';
-        $message_type = 'error';
     }
 }
 
@@ -77,41 +113,28 @@ if (isset($_POST['issue_items'])) {
     $transaction_id = mysqli_real_escape_string($connection, $_POST['transaction_id']);
     $admin_id = mysqli_real_escape_string($connection, $_SESSION['admin_id']);
 
+    // Update transaction
+    $update_trans_sql = "UPDATE borrowing_transactions SET status='issued' WHERE transaction_id='$transaction_id'";
+    mysqli_query($connection, $update_trans_sql);
+    $approval_sql = "INSERT INTO approvals (transaction_id, approval_type, admin_id) VALUES ('$transaction_id', 'issued_by', '$admin_id')";
+    mysqli_query($connection, $approval_sql);
+
     // Get items for transaction
-    $items_sql = "SELECT ti.*, i.available_quantity FROM borrowed_items ti JOIN items i ON ti.item_id = i.item_id WHERE ti.transaction_id = '$transaction_id'";
+    $items_sql = "SELECT ti.* FROM borrowed_items ti WHERE ti.transaction_id = '$transaction_id'";
     $items_result = mysqli_query($connection, $items_sql);
-    $insufficient_stock = false;
+
+    // Update borrowed_items and items
     while ($item_row = mysqli_fetch_assoc($items_result)) {
-        if ($item_row['available_quantity'] < $item_row['quantity_required']) {
-            $insufficient_stock = true;
-            break;
-        }
+        $item_id = $item_row['item_id'];
+        $quantity = $item_row['quantity_required'];
+        $update_ti_sql = "UPDATE borrowed_items SET quantity_issued=$quantity WHERE borrowed_item_id='{$item_row['borrowed_item_id']}'";
+        mysqli_query($connection, $update_ti_sql);
+        $update_item_sql = "UPDATE items SET available_quantity = available_quantity - $quantity WHERE item_id='$item_id'";
+        mysqli_query($connection, $update_item_sql);
     }
 
-    if (!$insufficient_stock) {
-        // Update transaction
-        $update_trans_sql = "UPDATE borrowing_transactions SET status='issued' WHERE transaction_id='$transaction_id'";
-        mysqli_query($connection, $update_trans_sql);
-        $approval_sql = "INSERT INTO approvals (transaction_id, approval_type, admin_id) VALUES ('$transaction_id', 'issued_by', '$admin_id')";
-        mysqli_query($connection, $approval_sql);
-
-        // Update borrowed_items and items
-        mysqli_data_seek($items_result, 0);
-        while ($item_row = mysqli_fetch_assoc($items_result)) {
-            $item_id = $item_row['item_id'];
-            $quantity = $item_row['quantity_required'];
-            $update_ti_sql = "UPDATE borrowed_items SET quantity_issued=$quantity WHERE borrowed_item_id='{$item_row['borrowed_item_id']}'";
-            mysqli_query($connection, $update_ti_sql);
-            $update_item_sql = "UPDATE items SET available_quantity = available_quantity - $quantity WHERE item_id='$item_id'";
-            mysqli_query($connection, $update_item_sql);
-        }
-
-        $message = 'Items issued successfully!';
-        $message_type = 'success';
-    } else {
-        $message = 'Error issuing items. Insufficient stock.';
-        $message_type = 'error';
-    }
+    $message = 'Items issued successfully!';
+    $message_type = 'success';
 }
 
 if (isset($_POST['return_items'])) {
@@ -126,13 +149,22 @@ if (isset($_POST['return_items'])) {
     $approval_sql = "INSERT INTO approvals (transaction_id, approval_type, admin_id) VALUES ('$transaction_id', 'assessed_received_by', '$admin_id')";
     mysqli_query($connection, $approval_sql);
 
-    // Update borrowed_items
+    // Update borrowed_items and items
     foreach ($quantities_returned as $borrowed_item_id => $quantity_returned) {
         $borrowed_item_id = mysqli_real_escape_string($connection, $borrowed_item_id);
         $quantity_returned = intval($quantity_returned);
 
         $update_ti_sql = "UPDATE borrowed_items SET quantity_returned = quantity_returned + $quantity_returned WHERE borrowed_item_id='$borrowed_item_id'";
         mysqli_query($connection, $update_ti_sql);
+
+        // Get item_id for updating available_quantity
+        $item_sql = "SELECT item_id FROM borrowed_items WHERE borrowed_item_id='$borrowed_item_id'";
+        $item_result = mysqli_query($connection, $item_sql);
+        $item_row = mysqli_fetch_assoc($item_result);
+        $item_id = $item_row['item_id'];
+
+        $update_item_sql = "UPDATE items SET available_quantity = available_quantity + $quantity_returned WHERE item_id='$item_id'";
+        mysqli_query($connection, $update_item_sql);
     }
 
     $message = 'Items returned successfully!';
@@ -344,6 +376,16 @@ while ($row = mysqli_fetch_assoc($items_result)) {
                 </thead>
                 <tbody>
                     <?php foreach ($transactions_list as $trans): ?>
+                    <?php
+                        $trans_id = mysqli_real_escape_string($connection, $trans['transaction_id']);
+                        $items_sql = "SELECT ti.borrowed_item_id, ti.quantity_required, ti.quantity_issued, ti.quantity_returned, i.item_id, i.item_name " .
+                            "FROM borrowed_items ti JOIN items i ON ti.item_id = i.item_id WHERE ti.transaction_id = '$trans_id'";
+                        $items_result = mysqli_query($connection, $items_sql);
+                        $items = array();
+                        while ($item_row = mysqli_fetch_assoc($items_result)) {
+                            $items[] = $item_row;
+                        }
+                        ?>
                     <tr>
                         <td><?php echo $trans['transaction_id']; ?></td>
                         <td>
@@ -359,16 +401,7 @@ while ($row = mysqli_fetch_assoc($items_result)) {
                                 <?php echo ucfirst($trans['status']); ?>
                             </span>
                         </td>
-                        <td data-items='<?php
-                            $trans_id = mysqli_real_escape_string($connection, $trans['transaction_id']);
-                            $items_sql = "SELECT ti.borrowed_item_id, ti.quantity_required, ti.quantity_issued, ti.quantity_returned, i.item_id, i.item_name FROM borrowed_items ti JOIN items i ON ti.item_id = i.item_id WHERE ti.transaction_id = '$trans_id'";
-                            $items_result = mysqli_query($connection, $items_sql);
-                            $items = array();
-                            while ($item_row = mysqli_fetch_assoc($items_result)) {
-                                $items[] = $item_row;
-                            }
-                            echo htmlspecialchars(json_encode($items), ENT_QUOTES, 'UTF-8');
-                        ?>'>
+                        <td data-items="<?php echo htmlspecialchars(json_encode($items)); ?>">
                             <?php
                                 if (!empty($items)) {
                                     foreach ($items as $item) {
@@ -378,7 +411,7 @@ while ($row = mysqli_fetch_assoc($items_result)) {
                                 } else {
                                     echo 'No items borrowed';
                                 }
-                            ?>
+                                ?>
                         </td>
                         <td>
                             <?php if ($trans['status'] == 'pending'): ?>
@@ -428,122 +461,9 @@ while ($row = mysqli_fetch_assoc($items_result)) {
         </div>
     </div>
 
-    <script>
-    function showCreateForm() {
-        document.getElementById('createForm').style.display = 'block';
-        document.getElementById('filterForm').style.display = 'none';
-    }
-
-    function hideCreateForm() {
-        document.getElementById('createForm').style.display = 'none';
-    }
-
-    function showFilterForm() {
-        document.getElementById('filterForm').style.display = 'block';
-        document.getElementById('createForm').style.display = 'none';
-    }
-
-    function hideFilterForm() {
-        document.getElementById('filterForm').style.display = 'none';
-        // Clear filters
-        window.location.href = 'transactions.php';
-    }
-
-    function addItemToList() {
-        const select = document.getElementById('item_select');
-        const selectedOption = select.options[select.selectedIndex];
-
-        if (selectedOption.value) {
-            const itemId = selectedOption.value;
-            const itemName = selectedOption.getAttribute('data-name');
-            const available = selectedOption.getAttribute('data-available');
-
-            const container = document.getElementById('selectedItems');
-
-            // Check if item already added
-            const existingInputs = container.querySelectorAll('input[name^="items"]');
-            for (let input of existingInputs) {
-                if (input.name === `items[${itemId}]`) {
-                    alert('This item is already added.');
-                    select.selectedIndex = 0;
-                    return;
-                }
-            }
-
-            const itemDiv = document.createElement('div');
-            itemDiv.innerHTML = `
-                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <strong>${itemName}</strong> (Available: ${available})<br>
-                    <label>Quantity to borrow:
-                        <input type="number" name="items[${itemId}]" min="1" max="${available}" value="1" style="margin-left: 10px;">
-                    </label>
-                    <button type="button" onclick="removeItem(this)" style="margin-left: 10px; background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px;">Remove</button>
-                </div>
-            `;
-
-            container.appendChild(itemDiv);
-            select.selectedIndex = 0;
-        }
-    }
-
-    function removeItem(button) {
-        button.parentElement.remove();
-    }
-
-    function showReturnForm(transactionId) {
-        document.getElementById('returnTransactionId').value = transactionId;
-        document.getElementById('returnItemsList').innerHTML = '';
-
-        // Find the transaction row with the matching transactionId
-        const rows = document.querySelectorAll('tbody tr');
-        let itemsData = null;
-        rows.forEach(row => {
-            const idCell = row.querySelector('td:first-child');
-            if (idCell && idCell.textContent == transactionId) {
-                itemsData = row.querySelector('td[data-items]').getAttribute('data-items');
-            }
-        });
-
-        if (!itemsData) {
-            itemsList.innerHTML = '<p>No items found for this transaction.</p>';
-            return;
-        }
-
-        let items = [];
-        try {
-            items = JSON.parse(itemsData);
-        } catch (e) {
-            itemsList.innerHTML = '<p>Error parsing items data.</p>';
-            return;
-        }
-
-        if (items.length === 0) {
-            itemsList.innerHTML = '<p>No items found for this transaction.</p>';
-            return;
-        }
-
-        let html = '';
-        items.forEach(item => {
-            const maxReturnable = item.quantity_issued - item.quantity_returned;
-            html += `
-                <div style="margin-bottom: 10px;">
-                    <label>
-                        <strong>${item.item_name}</strong> (Issued: ${item.quantity_issued}, Returned: ${item.quantity_returned})<br>
-                        Quantity to return:
-                        <input type="number" name="quantities_returned[${item.borrowed_item_id}]" min="0" max="${maxReturnable}" value="${maxReturnable}" required>
-                    </label>
-                </div>
-            `;
-        });
-        document.getElementById('returnItemsList').innerHTML = html;
-        document.getElementById('returnModal').style.display = 'block';
-    }
-
-    function hideReturnForm() {
-        document.getElementById('returnModal').style.display = 'none';
-    }
-    </script>
+    <script src="transactions.js"></script>
     <script src="../assets/js/script.js"></script>
 </body>
 
 </html>
+?>

@@ -1,0 +1,161 @@
+function showCreateForm() {
+    document.getElementById('createForm').style.display = 'block';
+    document.getElementById('filterForm').style.display = 'none';
+    // Add event listeners for date changes
+    document.getElementById('date_needed').addEventListener('change', updateItemAvailability);
+    document.getElementById('date_of_return').addEventListener('change', updateItemAvailability);
+}
+
+function hideCreateForm() {
+    document.getElementById('createForm').style.display = 'none';
+}
+
+function showFilterForm() {
+    document.getElementById('filterForm').style.display = 'block';
+    document.getElementById('createForm').style.display = 'none';
+}
+
+function hideFilterForm() {
+    document.getElementById('filterForm').style.display = 'none';
+    // Clear filters
+    window.location.href = 'transactions.php';
+}
+
+function updateItemAvailability() {
+    const dateNeeded = document.getElementById('date_needed').value;
+    const dateOfReturn = document.getElementById('date_of_return').value;
+
+    if (!dateNeeded || !dateOfReturn) {
+        return; // Don't update if dates are not set
+    }
+
+    fetch(`../api/get_item_availability.php?date_needed=${dateNeeded}&date_of_return=${dateOfReturn}`)
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('item_select');
+            const options = select.options;
+            for (let i = 1; i < options.length; i++) { // Skip the first "Select Item" option
+                const option = options[i];
+                const itemId = option.value;
+                const itemName = option.getAttribute('data-name');
+                const available = data[itemId] || 0;
+                option.setAttribute('data-available', available);
+                option.textContent = `${itemName} (${available} available)`;
+            }
+        })
+        .catch(error => console.error('Error updating availability:', error));
+}
+
+function addItemToList() {
+    const select = document.getElementById('item_select');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (selectedOption.value) {
+        const itemId = selectedOption.value;
+        const itemName = selectedOption.getAttribute('data-name');
+        const available = parseInt(selectedOption.getAttribute('data-available'));
+
+        const container = document.getElementById('selectedItems');
+
+        // Check if item already added
+        const existingInputs = container.querySelectorAll('input[name^="items"]');
+        for (let input of existingInputs) {
+            if (input.name === `items[${itemId}]`) {
+                alert('This item is already added.');
+                select.selectedIndex = 0;
+                return;
+            }
+        }
+
+        const itemDiv = document.createElement('div');
+        itemDiv.innerHTML = `
+            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <strong>${itemName}</strong> (Available: <span id="avail-${itemId}">${available - 1}</span>)<br>
+                <label>Quantity to borrow:
+                    <input type="number" name="items[${itemId}]" min="1" max="${available}" value="1" style="margin-left: 10px;">
+                </label>
+                <button type="button" onclick="removeItem(this)" style="margin-left: 10px; background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px;">Remove</button>
+            </div>
+        `;
+
+        container.appendChild(itemDiv);
+
+        // Add event listener to update available display
+        const qtyInput = itemDiv.querySelector(`input[name="items[${itemId}]"]`);
+        const availSpan = itemDiv.querySelector(`#avail-${itemId}`);
+        qtyInput.addEventListener('input', function() {
+            const qty = parseInt(this.value) || 0;
+            if (qty > available) {
+                this.value = available;
+            }
+            availSpan.textContent = available - qty;
+        });
+
+        select.selectedIndex = 0;
+    }
+}
+
+function removeItem(button) {
+    button.parentElement.remove();
+}
+
+function showReturnForm(transactionId) {
+    document.getElementById('returnTransactionId').value = transactionId;
+    document.getElementById('returnItemsList').innerHTML = '';
+
+    // Find the transaction row with the matching transactionId
+    const rows = document.querySelectorAll('tbody tr');
+    let itemsData = null;
+    rows.forEach(row => {
+        const idCell = row.querySelector('td:first-child');
+        if (idCell && idCell.textContent == transactionId) {
+            itemsData = row.querySelector('td[data-items]').getAttribute('data-items');
+        }
+    });
+
+    if (!itemsData) {
+        document.getElementById('returnItemsList').innerHTML = '<p>No items found for this transaction.</p>';
+        return;
+    }
+
+    // Decode HTML entities
+    function decodeHtmlEntities(str) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+    }
+    itemsData = decodeHtmlEntities(itemsData);
+
+    let items = [];
+    try {
+        items = JSON.parse(itemsData);
+    } catch (e) {
+        document.getElementById('returnItemsList').innerHTML = '<p>Error parsing items data.</p>';
+        return;
+    }
+
+    if (items.length === 0) {
+        document.getElementById('returnItemsList').innerHTML = '<p>No items found for this transaction.</p>';
+        return;
+    }
+
+    let html = '';
+    items.forEach(item => {
+        const maxReturnable = item.quantity_issued - item.quantity_returned;
+        html += `
+            <div style="margin-bottom: 10px;">
+                <label>
+                    <strong>${item.item_name}</strong> (Issued: ${item.quantity_issued}, Returned: ${item.quantity_returned})<br>
+                    Quantity to return:
+                    <input type="number" name="quantities_returned[${item.borrowed_item_id}]" min="0" max="${maxReturnable}" value="${maxReturnable}" required>
+                </label>
+            </div>
+        `;
+    });
+    document.getElementById('returnItemsList').innerHTML = html;
+    document.getElementById('returnModal').style.display = 'block';
+}
+
+function hideReturnForm() {
+    document.getElementById('returnModal').style.display = 'none';
+}
