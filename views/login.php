@@ -88,9 +88,7 @@ if (isset($_POST['login'])) {
                 </button>
             </form>
 
-            <div class="login-footer">
-                <p>Version <?php echo $system_version; ?></p>
-            </div>
+
         </div>
     </div>
 </body>

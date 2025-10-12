@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 02, 2025 at 02:55 PM
+-- Generation Time: Oct 12, 2025 at 12:59 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,9 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `borrowing_system`
 --
-
--- --------------------------------------------------------
-
 
 -- --------------------------------------------------------
 
@@ -45,7 +42,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`admin_id`, `username`, `password_hash`, `email`, `full_name`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@system.com', 'System Administrator', '2025-09-21 08:28:32', '2025-10-02 12:37:01');
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@system.com', 'System Administrator', '2025-09-21 08:28:32', '2025-10-12 10:58:03');
 
 -- --------------------------------------------------------
 
@@ -68,9 +65,27 @@ CREATE TABLE `approvals` (
 --
 
 INSERT INTO `approvals` (`approval_id`, `transaction_id`, `approval_type`, `admin_id`, `approval_date`, `remarks`, `created_at`) VALUES
-(1, 1, 'issued_by', 1, '2025-10-02 12:51:12', NULL, '2025-10-02 12:51:12'),
-(2, 1, 'assessed_received_by', 1, '2025-10-02 12:51:17', NULL, '2025-10-02 12:51:17'),
-(3, 1, 'noted_by', 1, '2025-10-02 12:51:33', NULL, '2025-10-02 12:51:33');
+(26, 13, 'issued_by', 1, '2025-10-03 01:55:49', NULL, '2025-10-03 01:55:49'),
+(27, 13, 'assessed_received_by', 1, '2025-10-03 01:55:50', NULL, '2025-10-03 01:55:50'),
+(28, 13, 'noted_by', 1, '2025-10-03 01:58:56', NULL, '2025-10-03 01:58:56'),
+(29, 12, 'issued_by', 1, '2025-10-03 01:58:58', NULL, '2025-10-03 01:58:58'),
+(30, 12, 'assessed_received_by', 1, '2025-10-03 01:59:00', NULL, '2025-10-03 01:59:00'),
+(31, 12, 'noted_by', 1, '2025-10-03 01:59:10', NULL, '2025-10-03 01:59:10'),
+(32, 16, 'issued_by', 1, '2025-10-08 12:13:36', NULL, '2025-10-08 12:13:36'),
+(33, 16, 'assessed_received_by', 1, '2025-10-08 12:13:39', NULL, '2025-10-08 12:13:39'),
+(34, 16, 'noted_by', 1, '2025-10-08 12:13:46', NULL, '2025-10-08 12:13:46'),
+(35, 15, 'noted_by', 1, '2025-10-08 14:23:29', NULL, '2025-10-08 14:23:29'),
+(36, 14, 'noted_by', 1, '2025-10-08 14:23:37', NULL, '2025-10-08 14:23:37'),
+(37, 15, 'issued_by', 1, '2025-10-08 14:23:41', NULL, '2025-10-08 14:23:41'),
+(38, 15, 'assessed_received_by', 1, '2025-10-08 14:23:46', NULL, '2025-10-08 14:23:46'),
+(39, 17, 'noted_by', 1, '2025-10-08 23:29:54', NULL, '2025-10-08 23:29:54'),
+(42, 17, 'issued_by', 1, '2025-10-09 00:56:45', NULL, '2025-10-09 00:56:45'),
+(43, 17, 'assessed_received_by', 1, '2025-10-09 00:56:49', NULL, '2025-10-09 00:56:49'),
+(44, 14, 'issued_by', 1, '2025-10-09 00:56:52', NULL, '2025-10-09 00:56:52'),
+(45, 14, 'assessed_received_by', 1, '2025-10-09 00:56:59', NULL, '2025-10-09 00:56:59'),
+(46, 19, 'noted_by', 1, '2025-10-09 00:57:47', NULL, '2025-10-09 00:57:47'),
+(47, 19, 'issued_by', 1, '2025-10-09 01:00:41', NULL, '2025-10-09 01:00:41'),
+(51, 19, 'assessed_received_by', 1, '2025-10-09 01:03:52', NULL, '2025-10-09 01:03:52');
 
 -- --------------------------------------------------------
 
@@ -88,6 +103,29 @@ CREATE TABLE `borrowed_items` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `borrowed_items`
+--
+
+INSERT INTO `borrowed_items` (`borrowed_item_id`, `transaction_id`, `item_id`, `quantity_required`, `quantity_issued`, `quantity_returned`, `created_at`, `updated_at`) VALUES
+(3, 12, 1, 1, 1, 1, '2025-10-03 01:55:09', '2025-10-03 01:59:10'),
+(4, 12, 3, 3, 3, 3, '2025-10-03 01:55:09', '2025-10-03 01:59:10'),
+(5, 12, 5, 1, 1, 1, '2025-10-03 01:55:09', '2025-10-03 01:59:10'),
+(6, 13, 1, 1, 1, 1, '2025-10-03 01:55:31', '2025-10-03 01:58:56'),
+(7, 13, 3, 3, 3, 3, '2025-10-03 01:55:31', '2025-10-03 01:58:56'),
+(8, 13, 5, 1, 1, 1, '2025-10-03 01:55:31', '2025-10-03 01:58:56'),
+(9, 14, 4, 1, 1, 0, '2025-10-03 02:02:07', '2025-10-09 00:56:52'),
+(10, 14, 5, 4, 4, 0, '2025-10-03 02:02:07', '2025-10-09 00:56:52'),
+(11, 14, 1, 12, 12, 0, '2025-10-03 02:02:07', '2025-10-09 00:56:52'),
+(12, 15, 4, 1, 1, 1, '2025-10-03 02:06:38', '2025-10-08 14:23:46'),
+(13, 15, 5, 4, 4, 4, '2025-10-03 02:06:38', '2025-10-08 14:23:46'),
+(14, 15, 1, 12, 12, 12, '2025-10-03 02:06:38', '2025-10-08 14:23:46'),
+(15, 16, 3, 8, 8, 8, '2025-10-08 12:13:25', '2025-10-08 12:13:46'),
+(16, 16, 1, 4, 4, 4, '2025-10-08 12:13:25', '2025-10-08 12:13:46'),
+(17, 16, 5, 3, 3, 3, '2025-10-08 12:13:25', '2025-10-08 12:13:46'),
+(18, 17, 2, 7, 7, 0, '2025-10-08 23:29:40', '2025-10-09 00:56:45'),
+(19, 19, 2, 3, 3, 3, '2025-10-09 00:57:44', '2025-10-09 01:03:52');
 
 --
 -- Triggers `borrowed_items`
@@ -133,7 +171,8 @@ CREATE TABLE `borrowers` (
 --
 
 INSERT INTO `borrowers` (`borrower_id`, `id_number`, `full_name`, `department_course_office`, `contact_number`, `email_address`, `created_at`, `updated_at`) VALUES
-(1, 'ajhds', 'kdgakgdks', 'djak', '09674185880', 'aclo@gmail.com', '2025-09-21 09:35:37', '2025-09-21 09:35:37');
+(1, 'ajhds', 'kdgakgdks', 'djak', '09674185880', 'aclo@gmail.com', '2025-09-21 09:35:37', '2025-09-21 09:35:37'),
+(2, '2023300076', 'angel', 'mb', '0970970807', 'yehe@gmauk', '2025-10-08 23:25:52', '2025-10-08 23:26:16');
 
 -- --------------------------------------------------------
 
@@ -159,7 +198,13 @@ CREATE TABLE `borrowing_transactions` (
 --
 
 INSERT INTO `borrowing_transactions` (`transaction_id`, `borrower_id`, `activity_purpose`, `place_of_activity`, `date_requested`, `date_needed`, `date_of_return`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'basta ', 'dagat', '2025-10-02', '2025-10-15', '2025-10-23', 'returned', '2025-10-02 12:51:04', '2025-10-02 12:51:33');
+(12, 1, 'basta ', 'dagat', '2025-10-03', '2025-10-04', '2025-10-06', 'returned', '2025-10-03 01:55:09', '2025-10-03 01:59:10'),
+(13, 1, 'basta ', 'dagat', '2025-10-03', '2025-10-04', '2025-10-06', 'returned', '2025-10-03 01:55:30', '2025-10-03 01:58:56'),
+(14, 1, 'daagt ', 'dagat', '2025-10-04', '2025-10-06', '2025-10-16', 'returned', '2025-10-03 02:02:07', '2025-10-09 00:56:59'),
+(15, 1, 'daagt ', 'dagat', '2025-10-04', '2025-10-06', '2025-10-16', 'returned', '2025-10-03 02:06:38', '2025-10-08 14:23:46'),
+(16, 1, 'basta ', 'fkjdbsk', '2025-10-08', '2025-10-09', '2025-10-11', 'returned', '2025-10-08 12:13:25', '2025-10-08 12:13:46'),
+(17, 2, 'basta ', 'panaon', '2025-10-11', '2025-10-13', '2025-10-15', 'returned', '2025-10-08 23:29:40', '2025-10-09 00:56:49'),
+(19, 2, 'daagt ', 'dagat', '2025-10-10', '2025-10-13', '2025-10-15', 'returned', '2025-10-09 00:57:44', '2025-10-09 01:03:52');
 
 -- --------------------------------------------------------
 
@@ -174,6 +219,20 @@ CREATE TABLE `categories` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`category_id`, `category_name`, `created_at`, `updated_at`) VALUES
+(1, 'Field and Sampling Equipment', '2025-10-12 10:31:14', '2025-10-12 10:31:14'),
+(2, 'Measuring and Testing', '2025-09-21 08:28:32', '2025-10-12 10:24:17'),
+(3, 'Microscopes and Optical', '2025-09-21 08:28:32', '2025-10-12 10:24:55'),
+(4, 'Heating and Supports', '2025-09-21 08:28:32', '2025-10-12 10:25:33'),
+(10, 'Laboratory Glassware', '2025-09-21 08:28:32', '2025-10-12 10:34:58'),
+(100, 'Diving Equipment', '2025-10-12 10:26:19', '2025-10-12 10:31:10'),
+(101, 'Laboratory Furniture and Fixtures', '2025-10-12 10:39:12', '2025-10-12 10:40:14'),
+(102, 'Safety and Support Equipment', '2025-10-12 10:40:32', '2025-10-12 10:40:32');
+
 -- --------------------------------------------------------
 
 --
@@ -181,7 +240,7 @@ CREATE TABLE `categories` (
 --
 
 CREATE TABLE `items` (
-  `item_id` int(11) NOT NULL AUTO_INCREMENT,
+  `item_id` int(11) NOT NULL,
   `item_code` varchar(50) NOT NULL,
   `item_name` varchar(100) NOT NULL,
   `item_description` text DEFAULT NULL,
@@ -190,35 +249,20 @@ CREATE TABLE `items` (
   `available_quantity` int(11) NOT NULL DEFAULT 0,
   `unit` varchar(20) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`item_id`),
-  KEY `idx_items_category_id` (`category_id`)
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `items`
 --
 
---
--- Dumping data for table `categories`
---
-
-INSERT INTO `categories` (`category_id`, `category_name`, `created_at`, `updated_at`) VALUES
-(1, 'Electronics', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(2, 'Furniture', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(3, 'Supplies', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(4, 'Other', '2025-09-21 08:28:32', '2025-09-21 08:28:32');
-
---
--- Dumping data for table `items`
---
-
 INSERT INTO `items` (`item_id`, `item_code`, `item_name`, `item_description`, `category_id`, `total_quantity`, `available_quantity`, `unit`, `created_at`, `updated_at`) VALUES
-(1, 'LAPTOP001', 'Dell Laptop', 'Dell Inspiron 15 3000 Series', 1, 10, 10, 'pieces', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(2, 'PROJECTOR001', 'Epson Projector', 'Epson EB-S41 SVGA Projector', 1, 5, 5, 'pieces', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(3, 'WHITEBOARD001', 'Whiteboard', 'Standard Whiteboard 4x6 feet', 2, 8, 8, 'pieces', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(4, 'MARKER001', 'Whiteboard Markers', 'Set of colored whiteboard markers', 3, 50, 50, 'sets', '2025-09-21 08:28:32', '2025-09-21 08:28:32'),
-(5, '03704e21', 'pampers', 'basta', 4, 82, 82, 'pcs', '2025-09-21 09:36:30', '2025-09-21 09:36:30');
+(1, 'Beaker001', 'Beakers(1000ml)', 'Cleaning', 10, 8, 4, 'pieces', '2025-09-21 08:28:32', '2025-10-12 10:45:31'),
+(2, 'Beaker002', 'Beakers(500ml)', 'Cleaning', 10, 5, 0, 'pieces', '2025-09-21 08:28:32', '2025-10-12 10:47:13'),
+(3, 'Beaker003', 'Beakers(400ml)', 'Cleaning', 10, 6, 23, 'pieces', '2025-09-21 08:28:32', '2025-10-12 10:48:26'),
+(4, 'MARKER001', 'Whiteboard Markers', 'Set of colored whiteboard markers', 3, 50, 49, 'sets', '2025-09-21 08:28:32', '2025-10-09 00:56:52'),
+(5, 'Diving knives005', 'Diving knives', 'Cleaning/Checking/Testing', 100, 2, 83, 'pcs', '2025-09-21 09:36:30', '2025-10-12 10:52:30'),
+(6, 'Multimeter006', 'Multimeter', 'Cleaning/Checking/Testing', 2, 1, 0, 'pieces', '2025-10-12 10:54:26', '2025-10-12 10:54:26');
 
 -- --------------------------------------------------------
 
@@ -305,7 +349,9 @@ ALTER TABLE `categories`
 -- Indexes for table `items`
 --
 ALTER TABLE `items`
+  ADD PRIMARY KEY (`item_id`),
   ADD UNIQUE KEY `item_code` (`item_code`),
+  ADD KEY `idx_items_category_id` (`category_id`),
   ADD KEY `idx_items_available` (`available_quantity`);
 
 --
@@ -329,31 +375,37 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `approvals`
 --
 ALTER TABLE `approvals`
-  MODIFY `approval_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `approval_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `borrowed_items`
 --
 ALTER TABLE `borrowed_items`
-  MODIFY `borrowed_item_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `borrowed_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `borrowers`
 --
 ALTER TABLE `borrowers`
-  MODIFY `borrower_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `borrower_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `borrowing_transactions`
 --
 ALTER TABLE `borrowing_transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `categories`
+--
+ALTER TABLE `categories`
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
-  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `system_settings`
@@ -380,16 +432,16 @@ ALTER TABLE `borrowed_items`
   ADD CONSTRAINT `borrowed_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`item_id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `items`
---
-ALTER TABLE `items`
-  ADD CONSTRAINT `items_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `borrowing_transactions`
 --
 ALTER TABLE `borrowing_transactions`
   ADD CONSTRAINT `borrowing_transactions_ibfk_1` FOREIGN KEY (`borrower_id`) REFERENCES `borrowers` (`borrower_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `items`
+--
+ALTER TABLE `items`
+  ADD CONSTRAINT `items_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

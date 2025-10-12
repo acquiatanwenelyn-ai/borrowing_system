@@ -254,14 +254,17 @@ while ($row = mysqli_fetch_assoc($items_result)) {
                 <div class="form-row">
                     <div class="form-group">
                         <label for="borrower_id">Borrower</label>
-                        <select id="borrower_id" name="borrower_id" required>
-                            <option value="">Select Borrower</option>
-                            <?php foreach ($borrowers_list as $borrower_data): ?>
-                            <option value="<?php echo $borrower_data['borrower_id']; ?>">
-                                <?php echo $borrower_data['full_name'] . ' (' . $borrower_data['id_number'] . ')'; ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="searchable-dropdown" id="borrower_dropdown">
+                            <input type="hidden" name="borrower_id" id="borrower_id" required>
+                            <input type="text" id="borrower_search" placeholder="Search Borrower..." autocomplete="off">
+                            <div class="dropdown-options" id="borrower_options">
+                                <?php foreach ($borrowers_list as $borrower_data): ?>
+                                <div class="dropdown-option" data-value="<?php echo $borrower_data['borrower_id']; ?>">
+                                    <?php echo $borrower_data['full_name'] . ' (' . $borrower_data['id_number'] . ')'; ?>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -295,17 +298,19 @@ while ($row = mysqli_fetch_assoc($items_result)) {
                 <h4>Select Items to Borrow</h4>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="item_select">Item</label>
-                        <select id="item_select" onchange="addItemToList()">
-                            <option value="">Select Item</option>
-                            <?php foreach ($items_list as $item_data): ?>
-                            <option value="<?php echo $item_data['item_id']; ?>"
-                                data-name="<?php echo $item_data['item_name']; ?>"
-                                data-available="<?php echo $item_data['available_quantity']; ?>">
-                                <?php echo $item_data['item_name'] . ' (' . $item_data['available_quantity'] . ' available)'; ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label for="item_search">Item</label>
+                        <div class="searchable-dropdown" id="item_dropdown">
+                            <input type="text" id="item_search" placeholder="Search Item..." autocomplete="off">
+                            <div class="dropdown-options" id="item_options">
+                                <?php foreach ($items_list as $item_data): ?>
+                                <div class="dropdown-option" data-value="<?php echo $item_data['item_id']; ?>"
+                                    data-name="<?php echo $item_data['item_name']; ?>"
+                                    data-available="<?php echo $item_data['available_quantity']; ?>">
+                                    <?php echo $item_data['item_name'] . ' (' . $item_data['available_quantity'] . ' available)'; ?>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
