@@ -57,25 +57,28 @@ The database is normalized up to 5NF with the following tables:
 
 ```
 borrowing_system/
-├── classes/
-│   └── Database.php          # Database connection class
-├── models/
-│   ├── Admin.php            # Admin management
-│   ├── Borrower.php         # Borrower management
-│   ├── Item.php             # Inventory management
-│   └── Transaction.php      # Transaction management
-├── views/
-│   ├── login.php           # Login page
-│   ├── dashboard.php       # Main dashboard
-│   └── borrowers.php       # Borrower management
-├── includes/
-│   └── config.php          # System configuration
-├── assets/
-│   └── css/
-│       └── style.css       # System styles
-├── database_schema.sql     # Database schema
-├── index.php              # Entry point
-└── README.md              # This file
+├─ config.php
+├─ index.php                    # Admin login
+├─ admin/
+│  ├─ dashboard.php
+│  ├─ transactions.php
+│  ├─ approve_transaction.php
+│  └─ borrowers.php
+├─ student/
+│  ├─ register.php
+│  ├─ login.php
+│  └─ borrow_request.php
+├─ models/
+│  ├─ Admin.php
+│  ├─ Student.php
+│  ├─ Item.php
+│  └─ Transaction.php
+├─ assets/
+│  ├─ css/simple.css
+│  └─ js/app.js
+├─ database_schema.sql
+└─ README.md
+
 ```
 
 ## Usage
